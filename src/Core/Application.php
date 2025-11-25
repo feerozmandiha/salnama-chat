@@ -8,13 +8,14 @@ use SalnamaChat\Api\RestApi;
 use SalnamaChat\Services\WebSocketService;
 use SalnamaChat\Services\CustomerService;
 use SalnamaChat\Services\ConversationService;
+use SalnamaChat\Traits\Singleton;
 
 /**
  * کلاس اصلی مدیریت پلاگین (Singleton)
  */
 class Application {
     
-    use Traits\Singleton;
+    use Singleton;
     
     /**
      * @var array نمونه‌های سرویس‌ها
@@ -88,26 +89,28 @@ class Application {
             }
         }
     }
-    
+        
     /**
      * مقداردهی کنترلرها
      */
     private function initControllers(): void {
-        $this->controllers = [
-            'admin' => new AdminController(
-                $this->services['conversation'],
-                $this->services['customer']
-            ),
-            'chat' => new ChatController(
-                $this->services['customer'],
-                $this->services['conversation']
-            ),
-        ];
-        
-        // راه‌اندازی کنترلرها
-        foreach ($this->controllers as $controller) {
-            if (method_exists($controller, 'init')) {
-                $controller->init();
+        // فقط اگر وجود ندارند ایجاد کن
+        if (empty($this->controllers)) {
+            $this->controllers = [
+                'admin' => new AdminController(
+                    $this->services['conversation'],
+                    $this->services['customer']
+                ),
+                'chat' => new ChatController(
+                    $this->services['customer'],
+                    $this->services['conversation']
+                ),
+            ];
+            
+            foreach ($this->controllers as $controller) {
+                if (method_exists($controller, 'init')) {
+                    $controller->init();
+                }
             }
         }
     }
@@ -139,13 +142,15 @@ class Application {
      * بارگذاری فایل‌های ترجمه
      */
     public function loadTextdomain(): void {
-        load_plugin_textdomain(
-            Constants::TEXT_DOMAIN,
-            false,
-            dirname(plugin_basename(Constants::PLUGIN_FILE)) . '/languages'
-        );
+        // بارگذاری ترجمه در هوک init برای جلوگیری از خطا
+        add_action('init', function() {
+            load_plugin_textdomain(
+                Constants::TEXT_DOMAIN,
+                false,
+                dirname(plugin_basename(Constants::PLUGIN_FILE)) . '/languages'
+            );
+        });
     }
-    
     /**
      * بارگذاری اسکریپت‌های فرانت‌اند
      */
@@ -156,14 +161,14 @@ class Application {
         }
         
         wp_enqueue_style(
-            'salmama-chat-widget',
+            'salnama-chat-widget',
             Constants::PLUGIN_URL . 'assets/css/frontend/chat-widget.css',
             [],
             Constants::VERSION
         );
         
         wp_enqueue_script(
-            'salmama-chat-widget',
+            'salnama-chat-widget',
             Constants::PLUGIN_URL . 'assets/js/frontend/chat-widget.js',
             ['jquery'],
             Constants::VERSION,
@@ -179,19 +184,19 @@ class Application {
      */
     public function enqueueAdminAssets($hook): void {
         // فقط در صفحات مربوط به پلاگین بارگذاری شود
-        if (strpos($hook, 'salmama-chat') === false) {
+        if (strpos($hook, 'salnama-chat') === false) {
             return;
         }
         
         wp_enqueue_style(
-            'salmama-chat-admin',
+            'salnama-chat-admin',
             Constants::PLUGIN_URL . 'assets/css/admin/admin.css',
             [],
             Constants::VERSION
         );
         
         wp_enqueue_script(
-            'salmama-chat-admin',
+            'salnama-chat-admin',
             Constants::PLUGIN_URL . 'assets/js/admin/admin.js',
             ['jquery', 'wp-util'],
             Constants::VERSION,
@@ -204,7 +209,7 @@ class Application {
      */
     private function handleError(string $message, \Exception $e): void {
         // لاگ کردن خطا
-        error_log("Salmama Chat Error: {$message} - {$e->getMessage()}");
+        error_log("salnama Chat Error: {$message} - {$e->getMessage()}");
         
         // نمایش خطا در حالت دیباگ
         if (defined('WP_DEBUG') && WP_DEBUG && is_admin()) {
@@ -212,7 +217,7 @@ class Application {
                 ?>
                 <div class="notice notice-error">
                     <p>
-                        <strong>Salmama Chat:</strong> 
+                        <strong>salnama Chat:</strong> 
                         <?php echo esc_html($message); ?>
                         <br>
                         <small><?php echo esc_html($e->getMessage()); ?></small>
@@ -288,9 +293,9 @@ class Application {
             error_log('Error localizing customer data: ' . $e->getMessage());
         }
         
-        wp_localize_script('salmama-chat-widget', 'salmamaChat', [
+        wp_localize_script('salnama-chat-widget', 'salnamaChat', [
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('salmama_chat_nonce'),
+            'nonce' => wp_create_nonce('salnama_chat_nonce'),
             'customer' => $customer_data,
             'settings' => $this->getChatSettings(),
             'i18n' => $this->getTranslations(),
@@ -317,15 +322,15 @@ class Application {
      */
     private function getTranslations(): array {
         return [
-            'welcome' => __('خوش آمدید!', 'salmama-chat'),
-            'type_message' => __('پیام خود را بنویسید...', 'salmama-chat'),
-            'send' => __('ارسال', 'salmama-chat'),
-            'attach_file' => __('افزودن فایل', 'salmama-chat'),
-            'start_chat' => __('شروع گفتگو', 'salmama-chat'),
-            'online' => __('آنلاین', 'salmama-chat'),
-            'offline' => __('آفلاین', 'salmama-chat'),
-            'connecting' => __('در حال اتصال...', 'salmama-chat'),
-            'no_messages' => __('هنوز پیامی ارسال نشده است', 'salmama-chat'),
+            'welcome' => __('خوش آمدید!', 'salnama-chat'),
+            'type_message' => __('پیام خود را بنویسید...', 'salnama-chat'),
+            'send' => __('ارسال', 'salnama-chat'),
+            'attach_file' => __('افزودن فایل', 'salnama-chat'),
+            'start_chat' => __('شروع گفتگو', 'salnama-chat'),
+            'online' => __('آنلاین', 'salnama-chat'),
+            'offline' => __('آفلاین', 'salnama-chat'),
+            'connecting' => __('در حال اتصال...', 'salnama-chat'),
+            'no_messages' => __('هنوز پیامی ارسال نشده است', 'salnama-chat'),
         ];
     }
     

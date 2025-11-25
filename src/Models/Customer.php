@@ -159,7 +159,7 @@ class Customer {
         if (!empty($criteria['search'])) {
             $where_conditions[] = "(customer_name LIKE %s OR customer_email LIKE %s OR customer_phone LIKE %s)";
             $search_term = '%' . $this->db->esc_like($criteria['search']) . '%';
-            $params = array_merge($params, [$search_term, $search_term, $search_term]);
+            array_push($params, $search_term, $search_term, $search_term);
         }
         
         if (!empty($criteria['status'])) {
@@ -184,15 +184,25 @@ class Customer {
         // محاسبه pagination
         $offset = ($page - 1) * $per_page;
         
-        // query برای دریافت داده
+        // query برای دریافت داده - با placeholderها
         $sql = "SELECT * FROM {$table} {$where_sql} ORDER BY last_visit DESC LIMIT %d, %d";
-        $params = array_merge($params, [$offset, $per_page]);
+        $limit_params = [$offset, $per_page];
         
-        $customers = $this->db->get_results($sql, $params);
+        // اگر پارامتر داریم، همه را با هم ادغام می‌کنیم
+        if (!empty($params)) {
+            $all_params = array_merge($params, $limit_params);
+            $customers = $this->db->get_results($sql, $all_params);
+        } else {
+            $customers = $this->db->get_results($sql, $limit_params);
+        }
         
-        // query برای تعداد کل
+        // query برای تعداد کل - با placeholderها
         $count_sql = "SELECT COUNT(*) as total FROM {$table} {$where_sql}";
-        $total = $this->db->get_row($count_sql, $params)['total'] ?? 0;
+        $total_result = !empty($params) ? 
+            $this->db->get_row($count_sql, $params) : 
+            $this->db->get_row($count_sql);
+        
+        $total = $total_result['total'] ?? 0;
         
         return [
             'customers' => array_map([$this, 'format_customer_data'], $customers),

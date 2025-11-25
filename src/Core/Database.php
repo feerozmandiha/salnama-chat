@@ -1,13 +1,15 @@
 <?php
 
 namespace SalnamaChat\Core;
+use SalnamaChat\Traits\Singleton;
+
 
 /**
  * مدیریت ارتباط با دیتابیس
  */
 class Database {
     
-    use Traits\Singleton;
+    use Singleton;
     
     /**
      * @var \wpdb

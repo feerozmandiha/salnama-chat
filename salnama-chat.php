@@ -46,16 +46,16 @@ define('SALNAMA_CHAT_PLUGIN_DIR', __DIR__);
 define('SALNAMA_CHAT_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // تنظیمات پایه
-define('SALNAMA_CHAT_TEXT_DOMAIN', 'salmama-chat');
+define('SALNAMA_CHAT_TEXT_DOMAIN', 'salnama-chat');
 define('SALNAMA_CHAT_MIN_PHP_VERSION', '7.4');
 define('SALNAMA_CHAT_MIN_WP_VERSION', '5.6');
 define('SALNAMA_CHAT_REQUIRED_WP_CAPABILITY', 'manage_options');
 
 // جداول دیتابیس
-define('SALNAMA_CHAT_TABLE_CUSTOMERS', 'salmama_chat_customers');
-define('SALNAMA_CHAT_TABLE_CONVERSATIONS', 'salmama_chat_conversations');
-define('SALNAMA_CHAT_TABLE_MESSAGES', 'salmama_chat_messages');
-define('SALNAMA_CHAT_TABLE_OPERATORS', 'salmama_chat_operators');
+define('SALNAMA_CHAT_TABLE_CUSTOMERS', 'salnama_chat_customers');
+define('SALNAMA_CHAT_TABLE_CONVERSATIONS', 'salnama_chat_conversations');
+define('SALNAMA_CHAT_TABLE_MESSAGES', 'salnama_chat_messages');
+define('SALNAMA_CHAT_TABLE_OPERATORS', 'salnama_chat_operators');
 
 // وضعیت‌ها
 define('SALNAMA_CHAT_STATUS_ACTIVE', 'active');
@@ -87,19 +87,19 @@ define('SALNAMA_CHAT_FILE_MAX_SIZE', 10 * 1024 * 1024); // 10MB
 define('SALNAMA_CHAT_SESSION_TIMEOUT', 30 * MINUTE_IN_SECONDS);
 
 // کلیدهای option
-define('SALNAMA_CHAT_OPTION_SETTINGS', 'salmama_chat_settings');
-define('SALNAMA_CHAT_OPTION_VERSION', 'salmama_chat_version');
-define('SALNAMA_CHAT_OPTION_DB_VERSION', 'salmama_chat_db_version');
+define('SALNAMA_CHAT_OPTION_SETTINGS', 'salnama_chat_settings');
+define('SALNAMA_CHAT_OPTION_VERSION', 'salnama_chat_version');
+define('SALNAMA_CHAT_OPTION_DB_VERSION', 'salnama_chat_db_version');
 
 // REST API Routes
-define('SALNAMA_CHAT_API_NAMESPACE', 'salmama-chat/v1');
+define('SALNAMA_CHAT_API_NAMESPACE', 'salnama-chat/v1');
 
 // WebSocket
 define('SALNAMA_CHAT_WS_PORT', 8080);
 define('SALNAMA_CHAT_WS_HOST', '127.0.0.1');
 
 // Cache Keys
-define('SALNAMA_CHAT_CACHE_PREFIX', 'salmama_chat_');
+define('SALNAMA_CHAT_CACHE_PREFIX', 'salnama_chat_');
 
 /**
  * بررسی شرایط سرور قبل از راه‌اندازی

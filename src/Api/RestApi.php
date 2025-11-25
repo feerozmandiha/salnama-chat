@@ -432,7 +432,7 @@ class RestApi {
      */
     public function check_operator_permission(\WP_REST_Request $request): bool {
         return current_user_can(Constants::REQUIRED_WP_CAPABILITY) || 
-               current_user_can('salmama_chat_manage_conversations');
+               current_user_can('salnama_chat_manage_conversations');
     }
     
     /**

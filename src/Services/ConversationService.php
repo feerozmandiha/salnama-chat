@@ -268,6 +268,13 @@ class ConversationService {
     }
     
     /**
+     * دریافت مکالمات بر اساس وضعیت
+     */
+    public function get_conversations_by_status(string $status, int $page = 1, int $per_page = 20): array {
+        return $this->conversation_model->get_by_status($status, $page, $per_page);
+    }
+    
+    /**
      * دریافت آمار مکالمات
      */
     public function get_conversations_stats(array $filters = []): array {
@@ -285,36 +292,32 @@ class ConversationService {
             return false;
         }
     }
-
+    
     /**
- * دریافت مکالمات بر اساس وضعیت (برای API)
- */
-public function get_by_status(string $status, int $page = 1, int $per_page = 20): array {
-    $conversation_model = new \SalnamaChat\Models\Conversation();
-    return $conversation_model->get_by_status($status, $page, $per_page);
-}
-
-/**
- * دریافت پیام‌های یک مکالمه (برای API)
- */
-public function get_conversation_messages(int $conversation_id, int $page = 1, int $per_page = 50): array {
-    $message_model = new \SalnamaChat\Models\Message();
-    return $message_model->get_by_conversation($conversation_id, $page, $per_page);
-}
-
-/**
- * به روزرسانی مکالمه (برای API)
- */
-public function update_conversation(int $conversation_id, array $data): array {
-    $conversation_model = new \SalnamaChat\Models\Conversation();
-    return $conversation_model->update($conversation_id, $data);
-}
-
-/**
- * دریافت مکالمه (برای API)
- */
-public function get_conversation(int $conversation_id): array {
-    $conversation_model = new \SalnamaChat\Models\Conversation();
-    return $conversation_model->get_by_id($conversation_id);
-}
+     * علامت گذاری پیام‌های یک مکالمه به عنوان خوانده شده
+     */
+    public function mark_messages_as_read(int $conversation_id, string $sender_type): bool {
+        return $this->message_model->mark_conversation_read($conversation_id, $sender_type);
+    }
+    
+    /**
+     * دریافت پیام‌های یک مکالمه (برای API)
+     */
+    public function get_conversation_messages(int $conversation_id, int $page = 1, int $per_page = 50): array {
+        return $this->message_model->get_by_conversation($conversation_id, $page, $per_page);
+    }
+    
+    /**
+     * به روزرسانی مکالمه (برای API)
+     */
+    public function update_conversation(int $conversation_id, array $data): array {
+        return $this->conversation_model->update($conversation_id, $data);
+    }
+    
+    /**
+     * دریافت مکالمه (برای API)
+     */
+    public function get_conversation(int $conversation_id): array {
+        return $this->conversation_model->get_by_id($conversation_id);
+    }
 }
