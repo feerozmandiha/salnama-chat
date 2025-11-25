@@ -3,7 +3,7 @@
  * Plugin Name: Salnama Chat
  * Plugin URI: https://salenoo.ir
  * Description: سیستم چت آنلاین پیشرفته برای فروشگاه سالنمای نو
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Salenoo Team
  * Text Domain: salnama-chat
  * Domain Path: /languages
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
  * ثابت‌های اصلی پلاگین
  */
 final class SalnamaChatConstants {
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
     const PLUGIN_FILE = __FILE__;
     const PLUGIN_DIR = __DIR__;
     const PLUGIN_URL = '';
