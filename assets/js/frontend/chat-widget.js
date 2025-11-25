@@ -47,14 +47,10 @@
             $('.chat-window').addClass('active');
             $('#chat-input').focus();
             
-            // اگر مکالمه‌ای نداریم، ایجاد کن
-            if (!this.currentConversation) {
-                this.startNewConversation();
-            } else {
-                // اگر مکالمه داریم، پیام‌ها را بارگذاری کن
-                this.loadConversationMessages();
-                this.startPolling();
-            }
+            // فقط ویجت را باز کن، مکالمه ایجاد نکن
+            this.addWelcomeMessage();
+            
+            // اگر کاربر پیام داد، آن موقع مکالمه ایجاد شود
         }
 
         closeChat() {
@@ -281,7 +277,39 @@
             // نمایش خطا به کاربر
             console.error('Chat Error:', message);
         }
+
+        createConversationWithMessage(messageContent) {
+            $.ajax({
+                url: salnamaChat.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'salnama_chat_start_conversation',
+                    subject: 'مکالمه جدید',
+                    message: messageContent,
+                    nonce: salnamaChat.nonce
+                },
+                success: (response) => {
+                    if (response.success) {
+                        this.currentConversation = response.data.conversation.conversation_id;
+                        this.lastMessageId = 0;
+                        this.startPolling();
+                        
+                        // پیام کاربر را نمایش بده
+                        this.addMessage({
+                            sender_type: 'customer',
+                            message_content: messageContent,
+                            sent_at: new Date().toISOString()
+                        });
+                    }
+                }
+            });
+            
+            // پاک کردن input
+            $('#chat-input').val('');
+            this.resizeTextarea();
+        }
     }
+
 
     // راه‌اندازی وقتی DOM آماده است
     $(document).ready(() => {
