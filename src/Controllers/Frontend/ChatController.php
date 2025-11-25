@@ -32,7 +32,7 @@ class ChatController {
         
         add_action('wp_ajax_salnama_chat_start_conversation', [$this, 'ajax_start_conversation']);
         add_action('wp_ajax_nopriv_salnama_chat_start_conversation', [$this, 'ajax_start_conversation']);
-        
+        add_action('wp_footer', [$this, 'add_chat_widget']);
         // ثبت shortcodes
         add_shortcode('salnama_chat', [$this, 'chat_shortcode']);
         
@@ -195,21 +195,25 @@ class ChatController {
         }
         
         // CSS
+        
         wp_enqueue_style(
-            'salnama-chat-frontend',
-            Constants::get_asset_url('css/frontend/chat-widget.css'),
+            'salnama-chat-widget',
+            Constants::PLUGIN_URL . 'assets/css/frontend/chat-widget.css',
             [],
             Constants::VERSION
         );
-        
+
+
         // JavaScript
+
         wp_enqueue_script(
-            'salnama-chat-frontend',
-            Constants::get_asset_url('js/frontend/chat-widget.js'),
+            'salnama-chat-widget',
+            Constants::PLUGIN_URL . 'assets/js/frontend/chat-widget.js',
             ['jquery'],
             Constants::VERSION,
             true
         );
+    
         
         // Localize script
         $this->localize_script();
@@ -285,6 +289,13 @@ class ChatController {
             'theme' => $settings['appearance']['theme'] ?? 'light',
             'position' => $settings['appearance']['position'] ?? 'bottom-right'
         ];
+    }
+
+    // اضافه کردن ویجت به footer
+    public function add_chat_widget() {
+        if ($this->should_load_assets()) {
+            include Constants::get_template_path('frontend/chat-widget');
+        }
     }
     
     /**

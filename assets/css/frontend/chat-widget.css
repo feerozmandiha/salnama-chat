@@ -1,0 +1,208 @@
+/* ویجت چت */
+.salnama-chat-widget {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 10000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* دکمه باز کردن چت */
+.chat-toggle-button {
+    background: #007cba;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.chat-toggle-button:hover {
+    background: #005a87;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.chat-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.chat-label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.chat-badge {
+    background: #ff4444;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* پنجره چت */
+.chat-window {
+    position: absolute;
+    bottom: 70px;
+    left: 0;
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-window.active {
+    display: flex;
+}
+
+/* هدر چت */
+.chat-header {
+    background: #007cba;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header-info h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.chat-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+}
+
+.status-indicator.online {
+    background: #4CAF50;
+}
+
+.status-indicator.offline {
+    background: #ff4444;
+}
+
+.chat-close {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.chat-close:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* بدنه چت */
+.chat-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.welcome-message {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* فوتر چت */
+.chat-footer {
+    border-top: 1px solid #e0e0e0;
+    background: white;
+}
+
+.chat-input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 15px;
+}
+
+#chat-input {
+    flex: 1;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 12px 16px;
+    resize: none;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    max-height: 120px;
+    min-height: 20px;
+}
+
+#chat-input:focus {
+    outline: none;
+    border-color: #007cba;
+}
+
+.chat-send {
+    background: #007cba;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.chat-send:hover {
+    background: #005a87;
+}
+
+.chat-send:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* ریسپانسیو */
+@media (max-width: 768px) {
+    .salnama-chat-widget {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+    }
+    
+    .chat-window {
+        width: auto;
+        left: 0;
+        right: 0;
+    }
+    
+    .chat-toggle-button {
+        margin: 0 auto;
+    }
+}
