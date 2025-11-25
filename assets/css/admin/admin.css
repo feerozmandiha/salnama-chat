@@ -1,0 +1,434 @@
+/* استایل‌های اصلی پنل ادمین */
+.salnama-chat-admin {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* کارت‌های آمار */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    border-left: 4px solid #2271b1;
+}
+
+.stat-card.stat-warning {
+    border-left-color: #d63638;
+}
+
+.stat-card.stat-info {
+    border-left-color: #00a0d2;
+}
+
+.stat-card.stat-success {
+    border-left-color: #00a32a;
+}
+
+.stat-icon {
+    margin-right: 15px;
+}
+
+.stat-icon .dashicons {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #72777c;
+}
+
+.stat-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #646970;
+    font-size: 14px;
+}
+
+/* layout داشبورد */
+.dashboard-row {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.dashboard-col-8 {
+    flex: 2;
+}
+
+.dashboard-col-4 {
+    flex: 1;
+}
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    padding: 20px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dcdcde;
+    margin-bottom: 0;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* لیست مکالمات */
+.conversations-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f1;
+    transition: background-color 0.2s;
+}
+
+.conversation-item:hover {
+    background-color: #f6f7f7;
+}
+
+.conversation-item:last-child {
+    border-bottom: none;
+}
+
+.conversation-avatar {
+    margin-right: 15px;
+}
+
+.conversation-details {
+    flex: 1;
+}
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.conversation-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.conversation-time {
+    font-size: 12px;
+    color: #646970;
+}
+
+.conversation-preview {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #646970;
+    line-height: 1.4;
+}
+
+.conversation-meta {
+    display: flex;
+    gap: 8px;
+}
+
+.conversation-actions {
+    margin-left: 15px;
+}
+
+/* بدج‌های وضعیت و اولویت */
+.priority-badge, .status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority-low {
+    background: #e6f2ff;
+    color: #0066cc;
+}
+
+.priority-medium {
+    background: #fff4e6;
+    color: #cc6600;
+}
+
+.priority-high {
+    background: #ffe6e6;
+    color: #cc0000;
+}
+
+.priority-urgent {
+    background: #cc0000;
+    color: #fff;
+}
+
+.status-open {
+    background: #e6f2ff;
+    color: #0066cc;
+}
+
+.status-pending {
+    background: #fff4e6;
+    color: #cc6600;
+}
+
+.status-closed {
+    background: #f0f0f1;
+    color: #646970;
+}
+
+.status-resolved {
+    background: #e6f7e6;
+    color: #00a32a;
+}
+
+.unassigned-badge {
+    background: #fff0f0;
+    color: #d63638;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+}
+
+/* مودال چت */
+.salnama-chat-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 800px;
+    height: 70%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #dcdcde;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f6f7f7;
+    border-radius: 8px 8px 0 0;
+}
+
+.chat-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.close-chat-modal {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #646970;
+    padding: 5px;
+}
+
+.close-chat-modal:hover {
+    color: #d63638;
+}
+
+.chat-modal-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.chat-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #dcdcde;
+    background: #f6f7f7;
+    border-radius: 0 0 8px 8px;
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+#chat-message-input {
+    flex: 1;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 120px;
+    padding: 10px;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+/* overlay مودال */
+.chat-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99999;
+}
+
+/* جدول مکالمات */
+.conversations-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 20px 0;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+}
+
+.conversations-table-container {
+    margin-top: 20px;
+}
+
+.column-customer {
+    width: 25%;
+}
+
+.column-subject {
+    width: 20%;
+}
+
+.column-priority,
+.column-operator,
+.column-status,
+.column-date {
+    width: 10%;
+}
+
+.column-actions {
+    width: 15%;
+}
+
+.customer-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.customer-details small {
+    color: #646970;
+}
+
+.row-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.button-small {
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+/* اپراتورهای آنلاین */
+.online-operators .operator-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.online-operators .operator-item:last-child {
+    border-bottom: none;
+}
+
+.operator-avatar {
+    margin-right: 10px;
+}
+
+.operator-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00a32a;
+    margin-right: 10px;
+}
+
+/* فعالیت اخیر */
+.recent-activity .activity-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 13px;
+}
+
+.recent-activity .activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-time {
+    color: #646970;
+    font-size: 11px;
+    display: block;
+}
+
+/* ریسپانسیو */
+@media (max-width: 1200px) {
+    .dashboard-row {
+        flex-direction: column;
+    }
+    
+    .stats-cards {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 782px) {
+    .conversations-filters {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .salnama-chat-modal {
+        width: 95%;
+        height: 80%;
+    }
+}
