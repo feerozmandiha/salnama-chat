@@ -4,6 +4,8 @@ namespace SalnamaChat\Services;
 
 use SalnamaChat\Models\Customer;
 use SalnamaChat\Core\Constants;
+use SalnamaChat\Core\Database;
+
 
 /**
  * سرویس business logic برای مدیریت مشتریان
@@ -111,8 +113,8 @@ class CustomerService {
      * جستجوی پیشرفته مشتریان
      */
     public function search_customers(array $filters = [], int $page = 1, int $per_page = 20): array {
-        return $this->customer_model->search($filters, $page, $per_page);
-    }
+    $customer_model = new \SalnamaChat\Models\Customer();
+    return $customer_model->search($filters, $page, $per_page);    }
     
     /**
      * به روزرسانی پروفایل مشتری
@@ -164,6 +166,7 @@ class CustomerService {
      * دریافت آمار کلی مشتریان
      */
     public function get_customers_stats(): array {
+        $db = Database::getInstance();
         $table = Constants::get_table_name(Constants::TABLE_CUSTOMERS);
         
         $sql = "
@@ -177,7 +180,7 @@ class CustomerService {
             FROM {$table}
         ";
         
-        $stats = $this->customer_model->get_db()->get_row($sql);
+        $stats = $db->get_row($sql);
         
         return [
             'total_customers' => (int)($stats['total_customers'] ?? 0),
@@ -188,4 +191,5 @@ class CustomerService {
             'active_days' => (int)($stats['active_days'] ?? 0)
         ];
     }
+    
 }

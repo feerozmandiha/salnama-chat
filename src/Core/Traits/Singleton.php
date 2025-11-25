@@ -1,6 +1,6 @@
 <?php
 
-namespace SalnamaChat\Traits;
+namespace SalnamaChat\Core\Traits;
 
 trait Singleton {
     

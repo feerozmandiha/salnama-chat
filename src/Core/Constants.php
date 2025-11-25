@@ -7,10 +7,10 @@ namespace SalnamaChat\Core;
  */
 class Constants {
     
-    // نسخه‌شناسی
-    const VERSION = '1.0.0';
-    const DB_VERSION = '1.0.0';
-    const API_VERSION = 'v1';
+    // استفاده از ثابت‌های تعریف شده در فایل اصلی
+    const VERSION = SALNAMA_CHAT_VERSION;
+    const DB_VERSION = SALNAMA_CHAT_DB_VERSION;
+    const API_VERSION = SALNAMA_CHAT_API_VERSION;
     
     // مسیرها
     const PLUGIN_FILE = SALNAMA_CHAT_PLUGIN_FILE;
@@ -18,60 +18,60 @@ class Constants {
     const PLUGIN_URL = SALNAMA_CHAT_PLUGIN_URL;
     
     // تنظیمات پایه
-    const TEXT_DOMAIN = 'salnama-chat';
-    const MIN_PHP_VERSION = '7.4';
-    const MIN_WP_VERSION = '5.6';
-    const REQUIRED_WP_CAPABILITY = 'manage_options';
+    const TEXT_DOMAIN = SALNAMA_CHAT_TEXT_DOMAIN;
+    const MIN_PHP_VERSION = SALNAMA_CHAT_MIN_PHP_VERSION;
+    const MIN_WP_VERSION = SALNAMA_CHAT_MIN_WP_VERSION;
+    const REQUIRED_WP_CAPABILITY = SALNAMA_CHAT_REQUIRED_WP_CAPABILITY;
     
     // جداول دیتابیس
-    const TABLE_CUSTOMERS = 'salnama_chat_customers';
-    const TABLE_CONVERSATIONS = 'salnama_chat_conversations';
-    const TABLE_MESSAGES = 'salnama_chat_messages';
-    const TABLE_OPERATORS = 'salnama_chat_operators';
+    const TABLE_CUSTOMERS = SALNAMA_CHAT_TABLE_CUSTOMERS;
+    const TABLE_CONVERSATIONS = SALNAMA_CHAT_TABLE_CONVERSATIONS;
+    const TABLE_MESSAGES = SALNAMA_CHAT_TABLE_MESSAGES;
+    const TABLE_OPERATORS = SALNAMA_CHAT_TABLE_OPERATORS;
     
     // وضعیت‌ها
-    const STATUS_ACTIVE = 'active';
-    const STATUS_INACTIVE = 'inactive';
-    const STATUS_BLOCKED = 'blocked';
-    const STATUS_PENDING = 'pending';
+    const STATUS_ACTIVE = SALNAMA_CHAT_STATUS_ACTIVE;
+    const STATUS_INACTIVE = SALNAMA_CHAT_STATUS_INACTIVE;
+    const STATUS_BLOCKED = SALNAMA_CHAT_STATUS_BLOCKED;
+    const STATUS_PENDING = SALNAMA_CHAT_STATUS_PENDING;
     
     // انواع پیام
-    const MESSAGE_TYPE_TEXT = 'text';
-    const MESSAGE_TYPE_IMAGE = 'image';
-    const MESSAGE_TYPE_FILE = 'file';
-    const MESSAGE_TYPE_SYSTEM = 'system';
+    const MESSAGE_TYPE_TEXT = SALNAMA_CHAT_MESSAGE_TYPE_TEXT;
+    const MESSAGE_TYPE_IMAGE = SALNAMA_CHAT_MESSAGE_TYPE_IMAGE;
+    const MESSAGE_TYPE_FILE = SALNAMA_CHAT_MESSAGE_TYPE_FILE;
+    const MESSAGE_TYPE_SYSTEM = SALNAMA_CHAT_MESSAGE_TYPE_SYSTEM;
     
     // اولویت‌ها
-    const PRIORITY_LOW = 'low';
-    const PRIORITY_MEDIUM = 'medium';
-    const PRIORITY_HIGH = 'high';
-    const PRIORITY_URGENT = 'urgent';
+    const PRIORITY_LOW = SALNAMA_CHAT_PRIORITY_LOW;
+    const PRIORITY_MEDIUM = SALNAMA_CHAT_PRIORITY_MEDIUM;
+    const PRIORITY_HIGH = SALNAMA_CHAT_PRIORITY_HIGH;
+    const PRIORITY_URGENT = SALNAMA_CHAT_PRIORITY_URGENT;
     
     // وضعیت مکالمات
-    const CONVERSATION_OPEN = 'open';
-    const CONVERSATION_PENDING = 'pending';
-    const CONVERSATION_CLOSED = 'closed';
-    const CONVERSATION_RESOLVED = 'resolved';
+    const CONVERSATION_OPEN = SALNAMA_CHAT_CONVERSATION_OPEN;
+    const CONVERSATION_PENDING = SALNAMA_CHAT_CONVERSATION_PENDING;
+    const CONVERSATION_CLOSED = SALNAMA_CHAT_CONVERSATION_CLOSED;
+    const CONVERSATION_RESOLVED = SALNAMA_CHAT_CONVERSATION_RESOLVED;
     
     // محدودیت‌ها
-    const MESSAGE_MAX_LENGTH = 2000;
-    const FILE_MAX_SIZE = 10 * 1024 * 1024; // 10MB
-    const SESSION_TIMEOUT = 30 * MINUTE_IN_SECONDS;
+    const MESSAGE_MAX_LENGTH = SALNAMA_CHAT_MESSAGE_MAX_LENGTH;
+    const FILE_MAX_SIZE = SALNAMA_CHAT_FILE_MAX_SIZE;
+    const SESSION_TIMEOUT = SALNAMA_CHAT_SESSION_TIMEOUT;
     
     // کلیدهای option
-    const OPTION_SETTINGS = 'salnama_chat_settings';
-    const OPTION_VERSION = 'salnama_chat_version';
-    const OPTION_DB_VERSION = 'salnama_chat_db_version';
+    const OPTION_SETTINGS = SALNAMA_CHAT_OPTION_SETTINGS;
+    const OPTION_VERSION = SALNAMA_CHAT_OPTION_VERSION;
+    const OPTION_DB_VERSION = SALNAMA_CHAT_OPTION_DB_VERSION;
     
     // REST API Routes
-    const API_NAMESPACE = 'salnama-chat/v1';
+    const API_NAMESPACE = SALNAMA_CHAT_API_NAMESPACE;
     
     // WebSocket
-    const WS_PORT = 8080;
-    const WS_HOST = '127.0.0.1';
+    const WS_PORT = SALNAMA_CHAT_WS_PORT;
+    const WS_HOST = SALNAMA_CHAT_WS_HOST;
     
     // Cache Keys
-    const CACHE_PREFIX = 'salnama_chat_';
+    const CACHE_PREFIX = SALNAMA_CHAT_CACHE_PREFIX;
     const CACHE_CUSTOMER_DATA = 'customer_data_';
     const CACHE_CONVERSATION = 'conversation_';
     
@@ -108,6 +108,30 @@ class Constants {
     }
     
     /**
+     * دریافت تمام اولویت‌ها
+     */
+    public static function get_priorities(): array {
+        return [
+            self::PRIORITY_LOW,
+            self::PRIORITY_MEDIUM,
+            self::PRIORITY_HIGH,
+            self::PRIORITY_URGENT
+        ];
+    }
+    
+    /**
+     * دریافت تمام وضعیت‌های مکالمه
+     */
+    public static function get_conversation_statuses(): array {
+        return [
+            self::CONVERSATION_OPEN,
+            self::CONVERSATION_PENDING,
+            self::CONVERSATION_CLOSED,
+            self::CONVERSATION_RESOLVED
+        ];
+    }
+    
+    /**
      * بررسی معتبر بودن نوع پیام
      */
     public static function is_valid_message_type(string $type): bool {
@@ -119,6 +143,20 @@ class Constants {
      */
     public static function is_valid_status(string $status): bool {
         return in_array($status, self::get_statuses());
+    }
+    
+    /**
+     * بررسی معتبر بودن اولویت
+     */
+    public static function is_valid_priority(string $priority): bool {
+        return in_array($priority, self::get_priorities());
+    }
+    
+    /**
+     * بررسی معتبر بودن وضعیت مکالمه
+     */
+    public static function is_valid_conversation_status(string $status): bool {
+        return in_array($status, self::get_conversation_statuses());
     }
     
     /**

@@ -285,4 +285,36 @@ class ConversationService {
             return false;
         }
     }
+
+    /**
+ * دریافت مکالمات بر اساس وضعیت (برای API)
+ */
+public function get_by_status(string $status, int $page = 1, int $per_page = 20): array {
+    $conversation_model = new \SalnamaChat\Models\Conversation();
+    return $conversation_model->get_by_status($status, $page, $per_page);
+}
+
+/**
+ * دریافت پیام‌های یک مکالمه (برای API)
+ */
+public function get_conversation_messages(int $conversation_id, int $page = 1, int $per_page = 50): array {
+    $message_model = new \SalnamaChat\Models\Message();
+    return $message_model->get_by_conversation($conversation_id, $page, $per_page);
+}
+
+/**
+ * به روزرسانی مکالمه (برای API)
+ */
+public function update_conversation(int $conversation_id, array $data): array {
+    $conversation_model = new \SalnamaChat\Models\Conversation();
+    return $conversation_model->update($conversation_id, $data);
+}
+
+/**
+ * دریافت مکالمه (برای API)
+ */
+public function get_conversation(int $conversation_id): array {
+    $conversation_model = new \SalnamaChat\Models\Conversation();
+    return $conversation_model->get_by_id($conversation_id);
+}
 }

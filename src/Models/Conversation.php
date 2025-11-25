@@ -305,7 +305,7 @@ class Conversation {
             throw new \Exception('customer_id الزامی است');
         }
         
-        if (!empty($data['status']) && !in_array($data['status'], ['open', 'pending', 'closed', 'resolved'])) {
+        if (!empty($data['status']) && !in_array($data['status'], Constants::get_conversation_statuses())) {
             throw new \Exception('وضعیت مکالمه نامعتبر');
         }
         

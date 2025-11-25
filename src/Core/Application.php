@@ -4,11 +4,10 @@ namespace SalnamaChat\Core;
 
 use SalnamaChat\Controllers\Admin\AdminController;
 use SalnamaChat\Controllers\Frontend\ChatController;
-use SalnamaChat\Controllers\Frontend\WidgetController;
+use SalnamaChat\Api\RestApi;
 use SalnamaChat\Services\WebSocketService;
 use SalnamaChat\Services\CustomerService;
 use SalnamaChat\Services\ConversationService;
-use SalnamaChat\Api\RestApi;
 
 /**
  * کلاس اصلی مدیریت پلاگین (Singleton)
@@ -77,7 +76,6 @@ class Application {
      */
     private function initServices(): void {
         $this->services = [
-            'database' => new Database(),
             'websocket' => new WebSocketService(),
             'customer' => new CustomerService(),
             'conversation' => new ConversationService(),
@@ -96,12 +94,14 @@ class Application {
      */
     private function initControllers(): void {
         $this->controllers = [
-            'admin' => new AdminController($this->services['conversation']),
-            'chat' => new ChatController(
+            'admin' => new AdminController(
                 $this->services['conversation'],
                 $this->services['customer']
             ),
-            'widget' => new WidgetController($this->services['websocket']),
+            'chat' => new ChatController(
+                $this->services['customer'],
+                $this->services['conversation']
+            ),
         ];
         
         // راه‌اندازی کنترلرها
@@ -156,15 +156,15 @@ class Application {
         }
         
         wp_enqueue_style(
-            'salnama-chat-widget',
-            SALNAMA_CHAT_PLUGIN_URL . 'src/Frontend/Assets/css/chat-widget.css',
+            'salmama-chat-widget',
+            Constants::PLUGIN_URL . 'assets/css/frontend/chat-widget.css',
             [],
             Constants::VERSION
         );
         
         wp_enqueue_script(
-            'salnama-chat-widget',
-            SALNAMA_CHAT_PLUGIN_URL . 'src/Frontend/Assets/js/chat-widget.js',
+            'salmama-chat-widget',
+            Constants::PLUGIN_URL . 'assets/js/frontend/chat-widget.js',
             ['jquery'],
             Constants::VERSION,
             true
@@ -175,11 +175,36 @@ class Application {
     }
     
     /**
+     * بارگذاری اسکریپت‌های ادمین
+     */
+    public function enqueueAdminAssets($hook): void {
+        // فقط در صفحات مربوط به پلاگین بارگذاری شود
+        if (strpos($hook, 'salmama-chat') === false) {
+            return;
+        }
+        
+        wp_enqueue_style(
+            'salmama-chat-admin',
+            Constants::PLUGIN_URL . 'assets/css/admin/admin.css',
+            [],
+            Constants::VERSION
+        );
+        
+        wp_enqueue_script(
+            'salmama-chat-admin',
+            Constants::PLUGIN_URL . 'assets/js/admin/admin.js',
+            ['jquery', 'wp-util'],
+            Constants::VERSION,
+            true
+        );
+    }
+    
+    /**
      * مدیریت خطاها
      */
     private function handleError(string $message, \Exception $e): void {
         // لاگ کردن خطا
-        error_log("salnama Chat Error: {$message} - {$e->getMessage()}");
+        error_log("Salmama Chat Error: {$message} - {$e->getMessage()}");
         
         // نمایش خطا در حالت دیباگ
         if (defined('WP_DEBUG') && WP_DEBUG && is_admin()) {
@@ -187,7 +212,7 @@ class Application {
                 ?>
                 <div class="notice notice-error">
                     <p>
-                        <strong>salnama Chat:</strong> 
+                        <strong>Salmama Chat:</strong> 
                         <?php echo esc_html($message); ?>
                         <br>
                         <small><?php echo esc_html($e->getMessage()); ?></small>
@@ -216,37 +241,75 @@ class Application {
      * بررسی آیا اسکریپت‌های فرانت باید بارگذاری شوند
      */
     private function shouldLoadFrontendAssets(): bool {
-        // منطق بررسی - مثلاً در صفحات خاص یا برای کاربران خاص
-        return !is_admin() && !wp_is_json_request();
+        // عدم بارگذاری در صفحات ادمین
+        if (is_admin()) {
+            return false;
+        }
+        
+        // عدم بارگذاری در REST API
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return false;
+        }
+        
+        // عدم بارگذاری در صفحات خاص
+        $disabled_pages = ['checkout', 'cart'];
+        foreach ($disabled_pages as $page) {
+            if (function_exists('is_page') && is_page($page)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     /**
      * ارسال داده به جاوااسکریپت
      */
     private function localizeScriptData(): void {
-        wp_localize_script('salnama-chat-widget', 'salnamaChatConfig', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('salnama_chat_nonce'),
-            'currentUser' => $this->getCurrentUserData(),
+        $customer_data = [];
+        
+        try {
+            $customer_service = $this->getService('customer');
+            if ($customer_service) {
+                $customer = $customer_service->identify_customer();
+                $customer_data = [
+                    'id' => $customer['customer_id'],
+                    'name' => $customer['customer_name'] ?? 'مهمان',
+                    'email' => $customer['customer_email'] ?? '',
+                ];
+                
+                // بررسی وجود مکالمه فعال
+                $conversation_service = $this->getService('conversation');
+                if ($conversation_service) {
+                    $customer_data['has_active_conversation'] = $conversation_service->has_active_conversation($customer['customer_id']);
+                }
+            }
+        } catch (\Exception $e) {
+            error_log('Error localizing customer data: ' . $e->getMessage());
+        }
+        
+        wp_localize_script('salmama-chat-widget', 'salmamaChat', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('salmama_chat_nonce'),
+            'customer' => $customer_data,
             'settings' => $this->getChatSettings(),
             'i18n' => $this->getTranslations(),
         ]);
     }
     
     /**
-     * دریافت اطلاعات کاربر جاری
-     */
-    private function getCurrentUserData(): array {
-        // منطق دریافت اطلاعات کاربر
-        return [];
-    }
-    
-    /**
      * دریافت تنظیمات چت
      */
     private function getChatSettings(): array {
-        // منطق دریافت تنظیمات
-        return [];
+        $settings = get_option(Constants::OPTION_SETTINGS, []);
+        
+        return [
+            'business_hours' => $settings['general']['business_hours'] ?? [],
+            'offline_message' => $settings['general']['offline_message'] ?? '',
+            'welcome_message' => $settings['appearance']['welcome_message'] ?? 'سلام! چطور می‌تونم کمکتون کنم؟',
+            'theme' => $settings['appearance']['theme'] ?? 'light',
+            'position' => $settings['appearance']['position'] ?? 'bottom-right'
+        ];
     }
     
     /**
@@ -254,9 +317,23 @@ class Application {
      */
     private function getTranslations(): array {
         return [
-            'typeMessage' => __('پیام خود را بنویسید...', 'salnama-chat'),
-            'send' => __('ارسال', 'salnama-chat'),
-            'connecting' => __('در حال اتصال...', 'salnama-chat'),
+            'welcome' => __('خوش آمدید!', 'salmama-chat'),
+            'type_message' => __('پیام خود را بنویسید...', 'salmama-chat'),
+            'send' => __('ارسال', 'salmama-chat'),
+            'attach_file' => __('افزودن فایل', 'salmama-chat'),
+            'start_chat' => __('شروع گفتگو', 'salmama-chat'),
+            'online' => __('آنلاین', 'salmama-chat'),
+            'offline' => __('آفلاین', 'salmama-chat'),
+            'connecting' => __('در حال اتصال...', 'salmama-chat'),
+            'no_messages' => __('هنوز پیامی ارسال نشده است', 'salmama-chat'),
         ];
+    }
+    
+    /**
+     * پاکسازی داده‌های قدیمی
+     */
+    public function cleanupOldData(): void {
+        // این متد می‌تواند برای پاکسازی داده‌های قدیمی استفاده شود
+        // مثلاً پیام‌های بسیار قدیمی یا sessionهای منقضی شده
     }
 }
