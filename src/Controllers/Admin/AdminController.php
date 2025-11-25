@@ -145,10 +145,16 @@ class AdminController {
             wp_die(__('شما دسترسی لازم برای مشاهده این صفحه را ندارید.', 'salnama-chat'));
         }
         
-        $stats = $this->get_dashboard_stats();
-        $recent_conversations = $this->conversation_service->get_pending_conversations(1, 10);
-        
-        include Constants::get_template_path('admin/dashboard');
+        try {
+            $stats = $this->get_dashboard_stats();
+            $recent_conversations = $this->conversation_service->get_pending_conversations(1, 10);
+            
+            include Constants::get_template_path('admin/dashboard');
+            
+        } catch (\Exception $e) {
+            echo '<div class="error"><p>خطا در بارگذاری داشبورد: ' . esc_html($e->getMessage()) . '</p></div>';
+            error_log('Dashboard Error: ' . $e->getMessage());
+        }
     }
     
     /**

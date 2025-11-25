@@ -47,12 +47,13 @@
             $('.chat-window').addClass('active');
             $('#chat-input').focus();
             
-            // شروع polling برای پیام‌های جدید
-            this.startPolling();
-            
             // اگر مکالمه‌ای نداریم، ایجاد کن
             if (!this.currentConversation) {
                 this.startNewConversation();
+            } else {
+                // اگر مکالمه داریم، پیام‌ها را بارگذاری کن
+                this.loadConversationMessages();
+                this.startPolling();
             }
         }
 
@@ -65,6 +66,13 @@
         }
 
         startNewConversation() {
+            // اگر در حال حاضر مکالمه‌ای در حال ایجاد است، صبر کن
+            if (this.creatingConversation) {
+                return;
+            }
+            
+            this.creatingConversation = true;
+
             $.ajax({
                 url: salnamaChat.ajax_url,
                 type: 'POST',
@@ -75,21 +83,40 @@
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
+                    this.creatingConversation = false;
+                    
                     if (response.success) {
                         this.currentConversation = response.data.conversation.conversation_id;
-                        this.addMessage({
-                            sender_type: 'customer',
-                            message_content: 'سلام! می‌خواهم اطلاعات بیشتری دریافت کنم.',
-                            sent_at: new Date().toISOString()
-                        });
+                        this.lastMessageId = 0;
+                        
+                        // فقط پیام خوشامدگویی نمایش بده، نه پیام تکراری
+                        this.addWelcomeMessage();
+                        
+                        // شروع polling برای پیام‌های جدید
+                        this.startPolling();
                     } else {
-                        this.showError('خطا در شروع مکالمه');
+                        this.showError(response.data.message || 'خطا در شروع مکالمه');
                     }
                 },
                 error: () => {
+                    this.creatingConversation = false;
                     this.showError('خطا در ارتباط با سرور');
                 }
             });
+        }
+
+        addWelcomeMessage() {
+            const welcomeHtml = `
+                <div class="message message-operator">
+                    <div class="message-content">
+                        <div class="message-text">سلام! به چت سالنمای نو خوش آمدید. چطور می‌تونم کمکتون کنم؟</div>
+                        <div class="message-time">${this.formatTime(new Date().toISOString())}</div>
+                    </div>
+                </div>
+            `;
+            
+            $('#chat-messages').html(welcomeHtml);
+            this.scrollToBottom();
         }
 
         sendMessage() {
@@ -202,6 +229,34 @@
             $('#chat-messages').append(messageHtml);
             this.scrollToBottom();
         }
+
+        loadConversationMessages() {
+    if (!this.currentConversation) return;
+    
+    $.ajax({
+        url: salnamaChat.ajax_url,
+        type: 'POST',
+        data: {
+            action: 'salnama_chat_get_messages',
+            conversation_id: this.currentConversation,
+            nonce: salnamaChat.nonce
+        },
+        success: (response) => {
+            if (response.success) {
+                $('#chat-messages').empty();
+                
+                if (response.data.messages.length > 0) {
+                    response.data.messages.forEach(message => {
+                        this.addMessage(message);
+                        this.lastMessageId = Math.max(this.lastMessageId, message.message_id);
+                    });
+                } else {
+                    this.addWelcomeMessage();
+                }
+            }
+        }
+    });
+}
 
         formatTime(timestamp) {
             const date = new Date(timestamp);

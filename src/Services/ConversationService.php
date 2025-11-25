@@ -313,6 +313,14 @@ class ConversationService {
     public function update_conversation(int $conversation_id, array $data): array {
         return $this->conversation_model->update($conversation_id, $data);
     }
+
+    /**
+     * دریافت مکالمات فعال مشتری
+     */
+    public function get_active_conversations(int $customer_id): array {
+        $conversation_model = new \SalnamaChat\Models\Conversation();
+        return $conversation_model->get_active_by_customer($customer_id);
+    }
     
     /**
      * دریافت مکالمه (برای API)
