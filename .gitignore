@@ -1,0 +1,43 @@
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE/editor settings
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore node and build artifacts
+node_modules/
+dist/
+build/
+*.log
+
+# Ignore Composer dependencies (if used)
+vendor/
+
+# Ignore WordPress specific cache/temp files
+*.sql
+*.tar.gz
+*.zip
+*.bak
+*.tmp
+
+# Ignore environment/config files
+.env
+.env.local
+.env.*.local
+
+# Ignore PHPUnit or testing outputs
+phpunit.xml
+coverage/
+.cache/
+
+# Ignore plugin-specific generated files
+*.pot
+*.mo
+*.po
+
+# Ignore uploads or assets not needed in repo
+assets/uploads/
