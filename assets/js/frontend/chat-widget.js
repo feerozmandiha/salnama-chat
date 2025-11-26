@@ -122,7 +122,7 @@
                 return;
             }
 
-            // نمایش پیام کاربر بلافاصله
+            // نمایش پیام کاربر بلافاصله (تجربه کاربری بهتر)
             this.addMessage({
                 sender_type: 'customer',
                 message_content: messageContent,
@@ -133,25 +133,13 @@
             $('#chat-input').val('');
             this.resizeTextarea();
 
-            // ارسال به سرور
-            $.ajax({
-                url: salnamaChat.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'salnama_chat_send_message',
-                    conversation_id: this.currentConversation,
-                    message: messageContent,
-                    nonce: salnamaChat.nonce
-                },
-                success: (response) => {
-                    if (!response.success) {
-                        this.showError(response.data.message);
-                    }
-                },
-                error: () => {
-                    this.showError('خطا در ارسال پیام');
-                }
-            });
+            // اگر مکالمه نداریم، اول ایجاد کن سپس پیام را ارسال کن
+            if (!this.currentConversation) {
+                this.createConversationAndSendMessage(messageContent);
+            } else {
+                // اگر مکالمه داریم، مستقیماً پیام را ارسال کن
+                this.sendMessageToServer(messageContent);
+            }
         }
 
         handleInputKeypress(e) {
@@ -273,38 +261,67 @@
             console.error('Chat Error:', message);
         }
 
-        createConversationWithMessage(messageContent) {
+        createConversationAndSendMessage(messageContent) {
             $.ajax({
                 url: salnamaChat.ajax_url,
                 type: 'POST',
                 data: {
                     action: 'salnama_chat_start_conversation',
-                    subject: 'مکالمه جدید',
+                    subject: 'مکالمه جدید از وبسایت',
                     message: messageContent,
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
-                            if (response.success) {
-                                this.currentConversation = response.data.conversation.conversation_id;
-                                this.lastMessageId = 0;
-                                this.startPolling();
-                                console.log('مکالمه جدید ایجاد شد:', this.currentConversation);
-                            } else {
-                                this.showError('خطا در ایجاد مکالمه: ' + (response.data.message || 'خطای ناشناخته'));
-                                // پیام کاربر را حذف کن چون ارسال نشد
-                                this.removeLastMessage();
-                            }
-                        },
-                        error: (xhr, status, error) => {
-                            this.showError('خطا در ارتباط با سرور');
-                            this.removeLastMessage();
-                            console.error('AJAX Error:', error);
-                        }
+                    if (response.success) {
+                        this.currentConversation = response.data.conversation.conversation_id;
+                        this.lastMessageId = 0;
+                        this.startPolling();
+                        console.log('مکالمه جدید ایجاد شد:', this.currentConversation);
+                    } else {
+                        this.showError('خطا در ایجاد مکالمه: ' + (response.data.message || 'خطای ناشناخته'));
+                        // پیام کاربر را حذف کن چون ارسال نشد
+                        this.removeLastMessage();
+                    }
+                },
+                error: (xhr, status, error) => {
+                    this.showError('خطا در ارتباط با سرور');
+                    this.removeLastMessage();
+                    console.error('AJAX Error:', error);
+                }
             });
-            
-            // پاک کردن input
-            $('#chat-input').val('');
-            this.resizeTextarea();
+        }
+
+        sendMessageToServer(messageContent) {
+            $.ajax({
+                url: salnamaChat.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'salnama_chat_send_message',
+                    conversation_id: this.currentConversation,
+                    message: messageContent,
+                    nonce: salnamaChat.nonce
+                },
+                success: (response) => {
+                    if (!response.success) {
+                        this.showError('خطا در ارسال پیام: ' + response.data.message);
+                        this.removeLastMessage();
+                    } else {
+                        console.log('پیام با موفقیت ارسال شد');
+                    }
+                },
+                error: (xhr, status, error) => {
+                    this.showError('خطا در ارسال پیام به سرور');
+                    this.removeLastMessage();
+                    console.error('AJAX Error:', error);
+                }
+            });
+        }
+
+        removeLastMessage() {
+            const messages = $('.message-customer');
+            if (messages.length > 0) {
+                messages.last().remove();
+            }
         }
     }
 
