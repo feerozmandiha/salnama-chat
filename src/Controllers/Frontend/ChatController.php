@@ -126,25 +126,32 @@ class ChatController {
             $subject = sanitize_text_field($_POST['subject'] ?? 'مکالمه جدید از وبسایت');
             $initial_message = sanitize_textarea_field($_POST['message'] ?? '');
             
-            // شناسایی مشتری
-            $customer = $this->customer_service->identify_customer();
-            error_log('Customer identified: ' . $customer['customer_id']);
+            // شناسایی مشتری - فقط اگر وجود دارد
+            $customer = $this->customer_service->identify_customer([], false); // false: اگر وجود ندارد ایجاد نکند
             
-            // شروع مکالمه جدید
-            $conversation = $this->conversation_service->start_conversation($customer['customer_id'], [
-                'subject' => $subject,
-                'priority' => 'medium',
-                'initial_message' => $initial_message
-            ]);
+            // بررسی وجود مکالمه فعال برای این مشتری
+            $active_conversations = $this->conversation_service->get_active_conversations($customer['customer_id']);
             
-            error_log('Conversation created: ' . $conversation['conversation_id']);
+            if (!empty($active_conversations)) {
+                // از مکالمه فعال موجود استفاده کن
+                $conversation = $active_conversations[0];
+                error_log('✅ Using existing conversation: ' . $conversation['conversation_id']);
+            } else {
+                // ایجاد مکالمه جدید
+                $conversation = $this->conversation_service->start_conversation($customer['customer_id'], [
+                    'subject' => $subject,
+                    'priority' => 'medium',
+                    'initial_message' => $initial_message
+                ]);
+                error_log('🆕 New conversation created: ' . $conversation['conversation_id']);
+            }
             
             wp_send_json_success([
                 'conversation' => $conversation
             ]);
             
         } catch (\Exception $e) {
-            error_log('Start Conversation Error: ' . $e->getMessage());
+            error_log('❌ Start Conversation Error: ' . $e->getMessage());
             wp_send_json_error([
                 'message' => $e->getMessage()
             ]);

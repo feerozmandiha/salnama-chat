@@ -19,40 +19,54 @@ class CustomerService {
     }
     
     /**
-     * شناسایی یا ایجاد مشتری
+     * شناسایی یا ایجاد مشتری - فقط وقتی لازم است
      */
-    public function identify_customer(array $session_data = []): array {
+    public function identify_customer(array $session_data = [], bool $create_if_not_exists = true): array {
         try {
             // ایجاد شناسه یکتا برای بازدیدکننده
             $visitor_id = $this->generate_visitor_id($session_data);
             
-            // داده‌های پایه مشتری
-            $customer_data = [
-                'unique_visitor_id' => $visitor_id,
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            ];
+            // اول بررسی کن آیا مشتری وجود دارد
+            $existing_customer = $this->customer_model->get_by_visitor_id($visitor_id);
             
-            // اگر کاربر لاگین کرده باشد
-            if (is_user_logged_in()) {
-                $user = wp_get_current_user();
-                $customer_data['user_id'] = $user->ID;
-                $customer_data['customer_email'] = $user->user_email;
-                $customer_data['customer_name'] = $user->display_name;
+            if ($existing_customer) {
+                // به روزرسانی آخرین بازدید
+                $this->customer_model->update_last_visit($existing_customer['customer_id']);
+                return $existing_customer;
             }
             
-            // ادغام با داده‌های session
-            if (!empty($session_data)) {
-                $customer_data = array_merge($customer_data, $session_data);
+            // اگر مشتری وجود ندارد و مجاز به ایجاد هستیم
+            if ($create_if_not_exists) {
+                // داده‌های پایه مشتری
+                $customer_data = [
+                    'unique_visitor_id' => $visitor_id,
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '',
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                ];
+                
+                // اگر کاربر لاگین کرده باشد
+                if (is_user_logged_in()) {
+                    $user = wp_get_current_user();
+                    $customer_data['user_id'] = $user->ID;
+                    $customer_data['customer_email'] = $user->user_email;
+                    $customer_data['customer_name'] = $user->display_name;
+                }
+                
+                // ادغام با داده‌های session
+                if (!empty($session_data)) {
+                    $customer_data = array_merge($customer_data, $session_data);
+                }
+                
+                // ایجاد مشتری جدید
+                $customer = $this->customer_model->create($customer_data);
+                
+                error_log('🆕 New customer created: ' . $customer['customer_id']);
+                
+                return $customer;
             }
             
-            // ایجاد یا به روزرسانی مشتری
-            $customer = $this->customer_model->create_or_update($customer_data);
-            
-            // به روزرسانی آخرین بازدید
-            $this->customer_model->update_last_visit($customer['customer_id']);
-            
-            return $customer;
+            // اگر مشتری وجود ندارد و نباید ایجاد شود
+            throw new \Exception('مشتری یافت نشد');
             
         } catch (\Exception $e) {
             error_log('Customer Identification Error: ' . $e->getMessage());

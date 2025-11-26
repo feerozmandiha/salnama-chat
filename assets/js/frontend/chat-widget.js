@@ -7,6 +7,8 @@
             this.currentConversation = null;
             this.lastMessageId = 0;
             this.pollInterval = null;
+            this.isSendingMessage = false; // فلگ جدید
+            this.messageQueue = []; // صف پیام‌ها
             
             this.init();
         }
@@ -16,6 +18,8 @@
             this.renderWidget();
         }
 
+        
+        // وقتی صفحه بسته می‌شود polling را متوقف کن
         bindEvents() {
             // باز و بستن چت
             $(document).on('click', '.chat-toggle-button', this.toggleChat.bind(this));
@@ -27,7 +31,11 @@
             
             // تغییر سایز textarea
             $(document).on('input', '#chat-input', this.resizeTextarea.bind(this));
+            
+            // وقتی کاربر صفحه را ترک می‌کند
+            $(window).on('beforeunload', this.stopPolling.bind(this));
         }
+
 
         renderWidget() {
             // ویجت از قبل در HTML وجود دارد، فقط رویدادها را وصل می‌کنیم
@@ -43,6 +51,8 @@
         }
 
         openChat() {
+            if (this.isOpen) return;
+            
             this.isOpen = true;
             $('.chat-window').addClass('active');
             $('#chat-input').focus();
@@ -52,18 +62,19 @@
                 this.addWelcomeMessage();
             }
             
-            // polling را شروع کن (اگر مکالمه داریم)
-            if (this.currentConversation) {
-                this.startPolling();
-            }
+            console.log('💬 Chat opened');
         }
 
         closeChat() {
+            if (!this.isOpen) return;
+            
             this.isOpen = false;
             $('.chat-window').removeClass('active');
             
             // توقف polling
             this.stopPolling();
+            
+            console.log('🚪 Chat closed');
         }
 
         startNewConversation() {
@@ -121,13 +132,20 @@
         }
 
         sendMessage() {
+            if (this.isSendingMessage) {
+                this.showError('لطفاً صبر کنید...');
+                return;
+            }
+            
             const messageContent = $('#chat-input').val().trim();
             
             if (!messageContent) {
                 return;
             }
 
-            // نمایش پیام کاربر بلافاصله (تجربه کاربری بهتر)
+            this.isSendingMessage = true;
+            
+            // نمایش پیام کاربر بلافاصله
             this.addMessage({
                 sender_type: 'customer',
                 message_content: messageContent,
@@ -142,7 +160,6 @@
             if (!this.currentConversation) {
                 this.createConversationAndSendMessage(messageContent);
             } else {
-                // اگر مکالمه داریم، مستقیماً پیام را ارسال کن
                 this.sendMessageToServer(messageContent);
             }
         }
@@ -161,22 +178,32 @@
         }
 
         startPolling() {
-            // هر 3 ثانیه چک کن برای پیام‌های جدید
+            // اگر قبلاً polling فعال است، متوقف کن
+            this.stopPolling();
+            
+            // هر 5 ثانیه چک کن برای پیام‌های جدید
             this.pollInterval = setInterval(() => {
                 this.checkNewMessages();
-            }, 3000);
+            }, 5000); // 5 ثانیه
+            
+            console.log('📡 Polling started');
         }
 
         stopPolling() {
             if (this.pollInterval) {
                 clearInterval(this.pollInterval);
                 this.pollInterval = null;
+                console.log('🛑 Polling stopped');
             }
         }
 
         checkNewMessages() {
-            if (!this.currentConversation) return;
+            if (!this.currentConversation || !this.isOpen) {
+                return;
+            }
 
+            console.log('🔍 Checking for new messages...');
+            
             $.ajax({
                 url: salnamaChat.ajax_url,
                 type: 'POST',
@@ -187,12 +214,22 @@
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
-                    if (response.success && response.data.messages.length > 0) {
-                        response.data.messages.forEach(message => {
-                            this.addMessage(message);
-                            this.lastMessageId = Math.max(this.lastMessageId, message.message_id);
-                        });
+                    if (response.success) {
+                        if (response.data.messages && response.data.messages.length > 0) {
+                            console.log('📨 New messages found:', response.data.messages.length);
+                            
+                            response.data.messages.forEach(message => {
+                                // فقط پیام‌های اپراتور را نمایش بده
+                                if (message.sender_type === 'operator') {
+                                    this.addMessage(message);
+                                }
+                                this.lastMessageId = Math.max(this.lastMessageId, message.message_id || 0);
+                            });
+                        }
                     }
+                },
+                error: (xhr, status, error) => {
+                    console.error('Polling error:', error);
                 }
             });
         }
@@ -277,21 +314,22 @@
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
+                    this.isSendingMessage = false;
+                    
                     if (response.success) {
                         this.currentConversation = response.data.conversation.conversation_id;
                         this.lastMessageId = 0;
                         this.startPolling();
-                        console.log('مکالمه جدید ایجاد شد:', this.currentConversation);
+                        console.log('✅ مکالمه ایجاد شد:', this.currentConversation);
                     } else {
-                        this.showError('خطا در ایجاد مکالمه: ' + (response.data.message || 'خطای ناشناخته'));
-                        // پیام کاربر را حذف کن چون ارسال نشد
+                        this.showError('خطا در ایجاد مکالمه');
                         this.removeLastMessage();
                     }
                 },
-                error: (xhr, status, error) => {
+                error: () => {
+                    this.isSendingMessage = false;
                     this.showError('خطا در ارتباط با سرور');
                     this.removeLastMessage();
-                    console.error('AJAX Error:', error);
                 }
             });
         }
@@ -307,17 +345,19 @@
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
+                    this.isSendingMessage = false;
+                    
                     if (!response.success) {
-                        this.showError('خطا در ارسال پیام: ' + response.data.message);
+                        this.showError('خطا در ارسال پیام');
                         this.removeLastMessage();
                     } else {
-                        console.log('پیام با موفقیت ارسال شد');
+                        console.log('✅ پیام ارسال شد');
                     }
                 },
-                error: (xhr, status, error) => {
+                error: () => {
+                    this.isSendingMessage = false;
                     this.showError('خطا در ارسال پیام به سرور');
                     this.removeLastMessage();
-                    console.error('AJAX Error:', error);
                 }
             });
         }
