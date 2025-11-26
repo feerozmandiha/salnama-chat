@@ -786,6 +786,140 @@
     color: #d63638;
 }
 
+/* استایل‌های مودال چت */
+.chat-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+}
+
+#chat-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 800px;
+    height: 70%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #dcdcde;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f6f7f7;
+    border-radius: 8px 8px 0 0;
+}
+
+.chat-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.chat-modal-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.chat-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #dcdcde;
+    background: #fff;
+    border-radius: 0 0 8px 8px;
+}
+
+#chat-message-input {
+    width: 100%;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 10px;
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+
+/* استایل‌های پیام‌ها در مودال */
+.message {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.message-outgoing {
+    justify-content: flex-end;
+}
+
+.message-outgoing .message-content {
+    background: #007cba;
+    color: white;
+}
+
+.message-incoming .message-content {
+    background: white;
+    border: 1px solid #dcdcde;
+}
+
+.message-avatar {
+    flex-shrink: 0;
+}
+
+.message-avatar img,
+.customer-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.customer-avatar {
+    background: #72777c;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.message-header strong {
+    font-size: 12px;
+}
+
+.message-time {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.message-body {
+    line-height: 1.4;
+}
+
 /* ریسپانسیو */
 @media (max-width: 1200px) {
     .settings-container {

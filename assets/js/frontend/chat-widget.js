@@ -9,6 +9,12 @@
             this.pollInterval = null;
             this.isSendingMessage = false; // فلگ جدید
             this.messageQueue = []; // صف پیام‌ها
+            this.isCheckingMessages = false; // فلگ جدید
+
+
+    
+            console.log('🎯 Chat Widget Initialized');
+            console.log('📝 Initial Last Message ID:', this.lastMessageId);
             
             this.init();
         }
@@ -199,11 +205,20 @@
 
         checkNewMessages() {
             if (!this.currentConversation || !this.isOpen) {
+                console.log('⏸️ Polling skipped - no conversation or chat closed');
                 return;
             }
 
-            console.log('🔍 Checking for new messages...');
+            console.log('🔍 Checking for new messages...', 'Last ID:', this.lastMessageId);
             
+            // اگر در حال حاضر در حال چک کردن هستیم، صبر کن
+            if (this.isCheckingMessages) {
+                console.log('⏳ Already checking messages, skipping...');
+                return;
+            }
+            
+            this.isCheckingMessages = true;
+
             $.ajax({
                 url: salnamaChat.ajax_url,
                 type: 'POST',
@@ -214,22 +229,48 @@
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
+                    this.isCheckingMessages = false;
+                    
                     if (response.success) {
-                        if (response.data.messages && response.data.messages.length > 0) {
-                            console.log('📨 New messages found:', response.data.messages.length);
+                        const messages = response.data.messages || [];
+                        const serverLastId = response.data.last_message_id || 0;
+                        
+                        console.log('📊 Server response:', {
+                            messages_count: messages.length,
+                            server_last_id: serverLastId,
+                            our_last_id: this.lastMessageId
+                        });
+
+                        if (messages.length > 0) {
+                            let newOperatorMessages = 0;
                             
-                            response.data.messages.forEach(message => {
+                            messages.forEach(message => {
                                 // فقط پیام‌های اپراتور را نمایش بده
                                 if (message.sender_type === 'operator') {
                                     this.addMessage(message);
+                                    newOperatorMessages++;
                                 }
-                                this.lastMessageId = Math.max(this.lastMessageId, message.message_id || 0);
                             });
+                            
+                            // lastMessageId را به روز کن (از سرور بگیر یا از آخرین پیام)
+                            if (serverLastId > this.lastMessageId) {
+                                this.lastMessageId = serverLastId;
+                            } else if (messages.length > 0) {
+                                // یا از آخرین پیام در آرایه استفاده کن
+                                const lastMessage = messages[messages.length - 1];
+                                this.lastMessageId = Math.max(this.lastMessageId, lastMessage.message_id || 0);
+                            }
+                            
+                            console.log('📨 New operator messages:', newOperatorMessages);
+                            console.log('🆕 Updated Last Message ID:', this.lastMessageId);
+                        } else {
+                            console.log('📭 No new messages found');
                         }
                     }
                 },
                 error: (xhr, status, error) => {
-                    console.error('Polling error:', error);
+                    this.isCheckingMessages = false;
+                    console.error('❌ Polling error:', error);
                 }
             });
         }
@@ -303,6 +344,7 @@
             console.error('Chat Error:', message);
         }
 
+        // بعد از ایجاد مکالمه
         createConversationAndSendMessage(messageContent) {
             $.ajax({
                 url: salnamaChat.ajax_url,
@@ -318,9 +360,10 @@
                     
                     if (response.success) {
                         this.currentConversation = response.data.conversation.conversation_id;
-                        this.lastMessageId = 0;
+                        this.lastMessageId = 0; // ریست به صفر
                         this.startPolling();
                         console.log('✅ مکالمه ایجاد شد:', this.currentConversation);
+                        console.log('🔄 Last Message ID reset to:', this.lastMessageId);
                     } else {
                         this.showError('خطا در ایجاد مکالمه');
                         this.removeLastMessage();

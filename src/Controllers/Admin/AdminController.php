@@ -304,8 +304,8 @@ class AdminController {
             ],
             'i18n' => $this->get_admin_translations(),
             'websocket' => [
-                'enabled' => true,
-                'url' => $this->get_websocket_url()
+                'enabled' => false, // غیرفعال کردن WebSocket
+                'url' => ''
             ]
         ]);
     }

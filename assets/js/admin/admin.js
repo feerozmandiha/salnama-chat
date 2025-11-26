@@ -3,18 +3,17 @@
 
     class SalnamaChatAdmin {
         constructor() {
-            this.socket = null;
             this.currentConversation = null;
-            this.isConnected = false;
+            this.isPolling = false;
+            this.pollInterval = null;
+            this.lastMessageId = 0;
             
             this.init();
         }
 
         init() {
             this.bindEvents();
-            this.connectWebSocket();
-            this.loadOnlineOperators();
-            this.loadRecentActivity();
+            console.log('✅ Salnama Chat Admin initialized (Polling Mode)');
         }
 
         bindEvents() {
@@ -37,98 +36,17 @@
             $(document).on('click', '.chat-modal-overlay', this.closeChatModal.bind(this));
         }
 
-        connectWebSocket() {
-            if (!salnamaChatAdmin.websocket.enabled) {
-                console.log('WebSocket is disabled');
-                return;
-            }
-
-            try {
-                this.socket = new WebSocket(salnamaChatAdmin.websocket.url);
-                
-                this.socket.onopen = () => {
-                    console.log('WebSocket connected');
-                    this.isConnected = true;
-                    this.authenticate();
-                };
-                
-                this.socket.onmessage = (event) => {
-                    this.handleWebSocketMessage(event);
-                };
-                
-                this.socket.onclose = () => {
-                    console.log('WebSocket disconnected');
-                    this.isConnected = false;
-                    // تلاش برای اتصال مجدد پس از 5 ثانیه
-                    setTimeout(() => this.connectWebSocket(), 5000);
-                };
-                
-                this.socket.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                };
-                
-            } catch (error) {
-                console.error('WebSocket connection failed:', error);
-            }
-        }
-
-        authenticate() {
-            if (!this.isConnected) return;
-
-            const message = {
-                action: 'authenticate',
-                payload: {
-                    type: 'operator',
-                    token: salnamaChatAdmin.current_user.id.toString(),
-                    conversation_id: this.currentConversation || 0
-                }
-            };
-            
-            this.socket.send(JSON.stringify(message));
-        }
-
-        handleWebSocketMessage(event) {
-            try {
-                const data = JSON.parse(event.data);
-                
-                switch (data.action) {
-                    case 'new_message':
-                        this.handleNewMessage(data.payload);
-                        break;
-                    case 'user_typing_start':
-                        this.showTypingIndicator(data.payload);
-                        break;
-                    case 'user_typing_stop':
-                        this.hideTypingIndicator(data.payload);
-                        break;
-                    case 'user_joined':
-                        this.handleUserJoined(data.payload);
-                        break;
-                    case 'user_left':
-                        this.handleUserLeft(data.payload);
-                        break;
-                    case 'user_disconnected':
-                        this.handleUserDisconnected(data.payload);
-                        break;
-                    default:
-                        console.log('Unknown WebSocket action:', data.action);
-                }
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
-        }
-
         openChatModal(e) {
             e.preventDefault();
             
-            const conversationId = $(e.target).data('conversation-id');
+            const conversationId = $(e.target).closest('[data-conversation-id]').data('conversation-id') || $(e.target).data('conversation-id');
             this.currentConversation = conversationId;
             
             this.showChatModal();
             this.loadConversationMessages(conversationId);
             
-            // عضویت در room مکالمه
-            this.joinConversation(conversationId);
+            // شروع polling برای این مکالمه
+            this.startPolling(conversationId);
         }
 
         showChatModal() {
@@ -142,9 +60,8 @@
         }
 
         closeChatModal() {
-            if (this.currentConversation) {
-                this.leaveConversation(this.currentConversation);
-            }
+            // توقف polling
+            this.stopPolling();
             
             $('#chat-modal').hide();
             $('.chat-modal-overlay').remove();
@@ -164,6 +81,11 @@
                     if (response.success) {
                         this.renderMessages(response.data.messages);
                         this.updateChatModalTitle(response.data.conversation);
+                        
+                        // آخرین messageId را ذخیره کن
+                        if (response.data.messages.length > 0) {
+                            this.lastMessageId = Math.max(...response.data.messages.map(msg => msg.message_id));
+                        }
                     } else {
                         this.showError(response.data.message);
                     }
@@ -199,7 +121,7 @@
                 <div class="message ${isOperator ? 'message-outgoing' : 'message-incoming'}">
                     <div class="message-avatar">
                         ${isOperator ? 
-                            `<img src="${salnamaChatAdmin.current_user.avatar}" alt="${senderName}">` :
+                            `<img src="${salmamaChatAdmin.current_user.avatar}" alt="${senderName}" width="32" height="32">` :
                             `<div class="customer-avatar">${senderName.charAt(0)}</div>`
                         }
                     </div>
@@ -229,12 +151,13 @@
                     </div>
                 `;
             } else {
-                return message.message_content.replace(/\n/g, '<br>');
+                return (message.message_content || '').replace(/\n/g, '<br>');
             }
         }
 
         formatTime(timestamp) {
-            const date = new Date(timestamp * 1000);
+            if (!timestamp) return '';
+            const date = new Date(timestamp * 1000 || timestamp);
             return date.toLocaleTimeString('fa-IR', {
                 hour: '2-digit',
                 minute: '2-digit'
@@ -244,29 +167,10 @@
         sendMessage() {
             const messageContent = $('#chat-message-input').val().trim();
             
-            if (!messageContent) {
+            if (!messageContent || !this.currentConversation) {
                 return;
             }
 
-            if (this.isConnected) {
-                // ارسال از طریق WebSocket
-                const message = {
-                    action: 'send_message',
-                    payload: {
-                        message: messageContent
-                    }
-                };
-                this.socket.send(JSON.stringify(message));
-            } else {
-                // ارسال از طریق AJAX
-                this.sendMessageAjax(messageContent);
-            }
-            
-            // پاک کردن input
-            $('#chat-message-input').val('');
-        }
-
-        sendMessageAjax(messageContent) {
             $.ajax({
                 url: salnamaChatAdmin.ajax_url,
                 type: 'POST',
@@ -278,6 +182,7 @@
                 },
                 success: (response) => {
                     if (response.success) {
+                        $('#chat-message-input').val('');
                         this.handleNewMessage(response.data.message);
                     } else {
                         this.showError(response.data.message);
@@ -290,20 +195,14 @@
         }
 
         handleNewMessage(message) {
-            // فقط اگر در مودال مربوطه هستیم، پیام را نمایش دهیم
-            if (this.currentConversation && message.conversation_id == this.currentConversation) {
-                const messageHtml = this.getMessageHtml(message);
-                $('#chat-window').append(messageHtml);
-                
-                // اسکرول به پایین
-                $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
-                
-                // پخش صدا
-                this.playNotificationSound();
-            }
+            const messageHtml = this.getMessageHtml(message);
+            $('#chat-window').append(messageHtml);
             
-            // به روزرسانی لیست مکالمات
-            this.refreshConversationsList();
+            // اسکرول به پایین
+            $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
+            
+            // به روزرسانی lastMessageId
+            this.lastMessageId = Math.max(this.lastMessageId, message.message_id);
         }
 
         handleMessageKeypress(e) {
@@ -311,6 +210,58 @@
                 e.preventDefault();
                 this.sendMessage();
             }
+        }
+
+        // Polling Methods
+        startPolling(conversationId) {
+            this.stopPolling();
+            
+            this.pollInterval = setInterval(() => {
+                this.checkNewMessages(conversationId);
+            }, 3000); // هر 3 ثانیه
+            
+            this.isPolling = true;
+            console.log('📡 Admin polling started for conversation:', conversationId);
+        }
+
+        stopPolling() {
+            if (this.pollInterval) {
+                clearInterval(this.pollInterval);
+                this.pollInterval = null;
+                this.isPolling = false;
+                console.log('🛑 Admin polling stopped');
+            }
+        }
+
+        checkNewMessages(conversationId) {
+            if (!conversationId || !this.isPolling) return;
+
+            $.ajax({
+                url: salnamaChatAdmin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'salnama_chat_poll_messages',
+                    conversation_id: conversationId,
+                    last_message_id: this.lastMessageId,
+                    nonce: salnamaChatAdmin.nonce
+                },
+                success: (response) => {
+                    if (response.success && response.data.messages.length > 0) {
+                        console.log('📨 New messages found:', response.data.messages.length);
+                        
+                        response.data.messages.forEach(message => {
+                            // فقط پیام‌های مشتری را نمایش بده (پیام‌های اپراتور را خودمان فرستادیم)
+                            if (message.sender_type === 'customer') {
+                                this.handleNewMessage(message);
+                            }
+                            this.lastMessageId = Math.max(this.lastMessageId, message.message_id);
+                        });
+                    }
+                },
+                error: (xhr, status, error) => {
+                    console.error('❌ Admin polling error:', error);
+                }
+            });
         }
 
         assignConversation(e) {
@@ -333,7 +284,7 @@
                 success: (response) => {
                     if (response.success) {
                         this.showSuccess('مکالمه با موفقیت به شما اختصاص داده شد');
-                        this.refreshConversationsList();
+                        location.reload(); // رفریش صفحه
                     } else {
                         this.showError(response.data.message);
                     }
@@ -350,7 +301,7 @@
         closeConversation(e) {
             e.preventDefault();
             
-            if (!confirm(salnamaChatAdmin.i18n.confirm_close)) {
+            if (!confirm('آیا از بستن این مکالمه اطمینان دارید؟')) {
                 return;
             }
             
@@ -373,7 +324,7 @@
                 success: (response) => {
                     if (response.success) {
                         this.showSuccess('مکالمه با موفقیت بسته شد');
-                        this.refreshConversationsList();
+                        location.reload();
                     } else {
                         this.showError(response.data.message);
                     }
@@ -387,58 +338,6 @@
             });
         }
 
-        joinConversation(conversationId) {
-            if (!this.isConnected) return;
-            
-            const message = {
-                action: 'join_conversation',
-                payload: {
-                    conversation_id: conversationId
-                }
-            };
-            
-            this.socket.send(JSON.stringify(message));
-        }
-
-        leaveConversation(conversationId) {
-            if (!this.isConnected) return;
-            
-            const message = {
-                action: 'leave_conversation',
-                payload: {
-                    conversation_id: conversationId
-                }
-            };
-            
-            this.socket.send(JSON.stringify(message));
-        }
-
-        loadOnlineOperators() {
-            // این تابع می‌تواند از WebSocket یا AJAX برای دریافت لیست اپراتورها استفاده کند
-            $('#online-operators-list').html(`
-                <div class="operator-item">
-                    <span class="operator-status"></span>
-                    <div class="operator-avatar">
-                        <img src="${salnamaChatAdmin.current_user.avatar}" alt="${salnamaChatAdmin.current_user.name}" width="32" height="32">
-                    </div>
-                    <div class="operator-info">
-                        <strong>${salnamaChatAdmin.current_user.name}</strong>
-                        <span class="operator-role">اپراتور</span>
-                    </div>
-                </div>
-            `);
-        }
-
-        loadRecentActivity() {
-            // بارگذاری فعالیت‌های اخیر
-            $('#recent-activity-list').html(`
-                <div class="activity-item">
-                    <span>شما به سیستم وارد شدید</span>
-                    <span class="activity-time">همین الان</span>
-                </div>
-            `);
-        }
-
         refreshStats() {
             $.ajax({
                 url: salnamaChatAdmin.ajax_url,
@@ -449,44 +348,16 @@
                 },
                 success: (response) => {
                     if (response.success) {
-                        this.updateStatsCards(response.data);
+                        this.showSuccess('آمار به روز شد');
+                        location.reload();
                     }
                 }
             });
         }
 
-        refreshConversationsList() {
-            // رفریش لیست مکالمات
-            window.location.reload();
-        }
-
-        showTypingIndicator(user) {
-            // نمایش نشانگر تایپینگ
-            const $typingIndicator = $('#typing-indicator');
-            if (!$typingIndicator.length) {
-                $('#chat-window').append(`
-                    <div id="typing-indicator" class="typing-indicator">
-                        <div class="typing-dots">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <span>${user.user_type === 'customer' ? 'مشتری' : 'اپراتور'} در حال نوشتن...</span>
-                    </div>
-                `);
-            }
-            
-            $('#chat-window').scrollTop($('#chat-window')[0].scrollHeight);
-        }
-
-        hideTypingIndicator(user) {
-            $('#typing-indicator').remove();
-        }
-
-        playNotificationSound() {
-            // پخش صدای نوتیفیکیشن
-            const audio = new Audio(salnamaChatAdmin.notification_sound);
-            audio.play().catch(e => console.log('Audio play failed:', e));
+        updateChatModalTitle(conversation) {
+            const customerName = conversation.customer_name || 'مشتری ناشناس';
+            $('#chat-modal-title').text(`چت با ${customerName}`);
         }
 
         showSuccess(message) {
@@ -504,7 +375,7 @@
                 </div>
             `);
             
-            $('.wrap').prepend(notice);
+            $('.wrap').first().prepend(notice);
             
             setTimeout(() => {
                 notice.fadeOut(() => notice.remove());
