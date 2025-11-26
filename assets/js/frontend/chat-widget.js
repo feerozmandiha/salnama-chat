@@ -122,11 +122,6 @@
                 return;
             }
 
-            if (!this.currentConversation) {
-                this.showError('لطفاً کمی صبر کنید...');
-                return;
-            }
-
             // نمایش پیام کاربر بلافاصله
             this.addMessage({
                 sender_type: 'customer',
@@ -289,19 +284,22 @@
                     nonce: salnamaChat.nonce
                 },
                 success: (response) => {
-                    if (response.success) {
-                        this.currentConversation = response.data.conversation.conversation_id;
-                        this.lastMessageId = 0;
-                        this.startPolling();
-                        
-                        // پیام کاربر را نمایش بده
-                        this.addMessage({
-                            sender_type: 'customer',
-                            message_content: messageContent,
-                            sent_at: new Date().toISOString()
-                        });
-                    }
-                }
+                            if (response.success) {
+                                this.currentConversation = response.data.conversation.conversation_id;
+                                this.lastMessageId = 0;
+                                this.startPolling();
+                                console.log('مکالمه جدید ایجاد شد:', this.currentConversation);
+                            } else {
+                                this.showError('خطا در ایجاد مکالمه: ' + (response.data.message || 'خطای ناشناخته'));
+                                // پیام کاربر را حذف کن چون ارسال نشد
+                                this.removeLastMessage();
+                            }
+                        },
+                        error: (xhr, status, error) => {
+                            this.showError('خطا در ارتباط با سرور');
+                            this.removeLastMessage();
+                            console.error('AJAX Error:', error);
+                        }
             });
             
             // پاک کردن input
