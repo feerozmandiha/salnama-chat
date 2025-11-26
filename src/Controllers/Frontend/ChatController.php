@@ -43,20 +43,22 @@ class ChatController {
     /**
      * ارسال پیام via AJAX
      */
+
     public function ajax_send_message(): void {
         $this->verify_nonce();
         
         try {
             $conversation_id = (int)($_POST['conversation_id'] ?? 0);
             $message_content = sanitize_textarea_field($_POST['message'] ?? '');
-            $attachment = $_FILES['attachment'] ?? [];
+            
+            error_log('Sending message to conversation: ' . $conversation_id);
             
             if (empty($conversation_id)) {
                 throw new \Exception('شناسه مکالمه نامعتبر');
             }
             
-            if (empty($message_content) && empty($attachment)) {
-                throw new \Exception('پیام یا فایل پیوست الزامی است');
+            if (empty($message_content)) {
+                throw new \Exception('متن پیام نمی‌تواند خالی باشد');
             }
             
             // شناسایی مشتری
@@ -67,22 +69,23 @@ class ChatController {
                 $conversation_id,
                 $customer['customer_id'],
                 'customer',
-                $message_content,
-                $attachment
+                $message_content
             );
             
+            error_log('Message sent successfully: ' . $message['message_id']);
+            
             wp_send_json_success([
-                'message' => $message,
-                'success' => true
+                'message' => $message
             ]);
             
         } catch (\Exception $e) {
+            error_log('Send Message Error: ' . $e->getMessage());
             wp_send_json_error([
-                'message' => $e->getMessage(),
-                'success' => false
+                'message' => $e->getMessage()
             ]);
         }
     }
+
     
     /**
      * دریافت پیام‌ها via AJAX
@@ -120,34 +123,30 @@ class ChatController {
         $this->verify_nonce();
         
         try {
-            $subject = sanitize_text_field($_POST['subject'] ?? 'مکالمه جدید');
+            $subject = sanitize_text_field($_POST['subject'] ?? 'مکالمه جدید از وبسایت');
             $initial_message = sanitize_textarea_field($_POST['message'] ?? '');
-            $priority = sanitize_text_field($_POST['priority'] ?? Constants::PRIORITY_MEDIUM);
             
             // شناسایی مشتری
             $customer = $this->customer_service->identify_customer();
-            
-            // بررسی وجود مکالمه فعال
-            if ($this->conversation_service->has_active_conversation($customer['customer_id'])) {
-                throw new \Exception('شما در حال حاضر یک مکالمه فعال دارید');
-            }
+            error_log('Customer identified: ' . $customer['customer_id']);
             
             // شروع مکالمه جدید
             $conversation = $this->conversation_service->start_conversation($customer['customer_id'], [
                 'subject' => $subject,
-                'priority' => $priority,
+                'priority' => 'medium',
                 'initial_message' => $initial_message
             ]);
             
+            error_log('Conversation created: ' . $conversation['conversation_id']);
+            
             wp_send_json_success([
-                'conversation' => $conversation,
-                'success' => true
+                'conversation' => $conversation
             ]);
             
         } catch (\Exception $e) {
+            error_log('Start Conversation Error: ' . $e->getMessage());
             wp_send_json_error([
-                'message' => $e->getMessage(),
-                'success' => false
+                'message' => $e->getMessage()
             ]);
         }
     }

@@ -47,10 +47,15 @@
             $('.chat-window').addClass('active');
             $('#chat-input').focus();
             
-            // فقط ویجت را باز کن، مکالمه ایجاد نکن
-            this.addWelcomeMessage();
+            // فقط ویجت را باز کن
+            if ($('#chat-messages').children().length === 0) {
+                this.addWelcomeMessage();
+            }
             
-            // اگر کاربر پیام داد، آن موقع مکالمه ایجاد شود
+            // polling را شروع کن (اگر مکالمه داریم)
+            if (this.currentConversation) {
+                this.startPolling();
+            }
         }
 
         closeChat() {
